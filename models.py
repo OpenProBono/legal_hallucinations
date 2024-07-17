@@ -120,6 +120,10 @@ class Query:
     ) -> None:
         # Call API
         match api_backend_type:
+            case api.OpenProBonoChat:
+                self.api_backend = api.OpenProBonoChat(
+                    prompt=self.query
+                )
             case api.OpenAIChat:
                 self.api_backend = api.OpenAIChat(
                     prompt=self.query,

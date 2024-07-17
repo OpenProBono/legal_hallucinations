@@ -4,6 +4,7 @@ import ast
 import csv
 import inspect
 import json
+import os
 import re
 import time
 from abc import abstractmethod
@@ -50,6 +51,8 @@ if TYPE_CHECKING:
 
 openai.api_key = OPENAI_API_KEY
 palm.configure(api_key=PALM_API_KEYS[0])
+
+OPB_API_KEY = os.environ["OPB_TEST_API_KEY"]
 
 
 @dataclass
@@ -112,6 +115,54 @@ class APIBackend:
             print(f"API ERROR: {e}; retrying in {retry_time} seconds.")
             time.sleep(retry_time)
             return self.retry(callable, try_n=try_n + 1)
+        
+@dataclass
+class OpenProBonoChat(APIBackend):
+    """Custom API backed added for OpenProBono AI"""
+
+    def _call_llm(self):
+        headers = {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+            "X-API-KEY": OPB_API_KEY
+        }
+        json_data = {
+            "message": self.prompt,
+            "bot_id": "custom_4o_dynamic",
+            "api_key": OPB_API_KEY
+        }
+        try:
+            response = requests.post('http://localhost:8080/initialize_session_chat', headers=headers, json=json_data, timeout=2500).json()
+            return response['output']
+        except Exception as e:
+            response = "most likely a timeout but heres the full thing:  " + str(e)
+            return response
+
+    def _build_request(
+        self, temperature, n, max_tokens
+    ) -> Callable[..., APIResponseObjectType]:
+        return partial(
+            openai.ChatCompletion.create,
+            model="gpt-3.5-turbo-0613",
+            messages=[
+                {"role": "system", "content": self.system_message or ""},
+                {"role": "user", "content": self.prompt},
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=1,
+            n=n,
+            frequency_penalty=0.0,
+            presence_penalty=0.0,
+            request_timeout=30,  # Note that this is currently undocumented
+        )
+
+    def do_request(self) -> None:
+        response = self._call_llm()
+        self.greedy_llm_answer_raw = response
+        # Only solicit a greedy response if this is not a zero-resource task
+        self.greedy_llm_answer = {"answer": self.greedy_llm_answer_raw}
+
 
 
 @dataclass

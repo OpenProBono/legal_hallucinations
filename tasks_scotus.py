@@ -10,6 +10,7 @@ from api import (
     LlamaChat,
     OpenAIChat,
     OpenAIChatGpt4,
+    OpenProBonoChat,
     TogetherAiLlamaChat,
 )
 from correctness_checks import (
@@ -52,6 +53,8 @@ match args.api:
         CURRENT_API = GooglePaLMCompletion
     case "gpt4":
         CURRENT_API = OpenAIChatGpt4
+    case "opb":
+        CURRENT_API = OpenProBonoChat
 
 # Load data
 scdb_sample: DataFrame = pd.read_csv(SCDB_SAMPLE_PATH, index_col=False)

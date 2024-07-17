@@ -50,6 +50,7 @@ LLM_MODEL_NAMES = {
     "OpenAIChat": "GPT 3.5",
     "GooglePaLMCompletion": "PaLM 2",
     "LlamaChat": "Llama 2",
+    "OpenProBonoChat": "OPB 1.0"
 }
 
 
